@@ -59,6 +59,7 @@ angular.module('vsong.controllers', ['ionic', 'vsong.services'])
   };
 })
 .controller('FavoritesCtrl', function($scope, User, $window) {
+	$scope.username = User.username
 	//get the list of our favorites from the user service
 	$scope.favorites = User.favorites;
 	$scope.removeSong = function(song, index) {
@@ -68,7 +69,7 @@ angular.module('vsong.controllers', ['ionic', 'vsong.services'])
 		$window.open(song.open_url, '_system');
 	};
 })
-.controller('TabsCtrl', function($scope, Recommendations, User) {
+.controller('TabsCtrl', function($scope, Recommendations, User, $window) {
 	// expose the number of new favorites to the scope
 	$scope.favCount = User.favoriteCount;
 
@@ -80,6 +81,26 @@ angular.module('vsong.controllers', ['ionic', 'vsong.services'])
 
 	$scope.leavingFavorites = function() {
 		Recommendations.init();
-	}
+	};
+
+	$scope.logout = function() {
+		User.destroySession();
+
+		// instead of using $state.go, we're going to redirect.
+		// reason: we need to ensure views aren't cached.
+		$window.location.href = 'index.html';
+	};
 
 })
+.controller('SplashCtrl', function($scope, $state, User) {
+	// attempt to signup/login via User.auth
+	$scope.submitForm = function(username, signingUp) {
+		User.auth(username, signingUp).then(function(){
+			// session is now set, so lets redirect to discover page
+			$state.go('tab.discover');
+		}, function() {
+			// error handling here
+			alert('Hmm... try another username.');
+		})
+	};
+});

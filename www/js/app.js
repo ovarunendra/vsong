@@ -20,11 +20,32 @@ angular.module('vsong', ['ionic', 'vsong.controllers'])
 
 .config(function($stateProvider, $urlRouterProvider) {
   $stateProvider
+  .state('splash', {
+    url: '/',
+    templateUrl: 'templates/splash.html',
+    controller: 'SplashCtrl',
+    onEnter: function($state, User) {
+      User.checkSession().then(function(hasSession){
+        if (hasSession) $state.go('tab.discover');
+      });
+    }
+  })
   .state('tab', {
     url: '/tab',
     abstract: true,
     templateUrl: 'templates/tabs.html',
-    controller: 'TabsCtrl'
+    controller: 'TabsCtrl',
+    // don't load the state until we've populated our User, if necessary.
+    resolve: {
+      populateSession: function(User) {
+        return User.checkSession();
+      }
+    },
+    onEnter: function($state, User) {
+      User.checkSession().then(function(hasSession){
+        if (!hasSession) $state.go('splash');
+      })
+    }
   })
   .state('tab.discover', {
     url: '/discover',
@@ -45,7 +66,7 @@ angular.module('vsong', ['ionic', 'vsong.controllers'])
     }
   })
 
-  $urlRouterProvider.otherwise('/tab/discover');
+  $urlRouterProvider.otherwise('/');
 })
 
 .constant('SERVER', {
