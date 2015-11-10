@@ -49,5 +49,7 @@ angular.module('vsong', ['ionic', 'vsong.controllers'])
 })
 
 .constant('SERVER', {
-  url: 'http://localhost:8100'
+  //url: 'http://localhost:8100'
+  //using public heroku server
+  url: 'https://ionic-songhop.herokuapp.com'
 });
