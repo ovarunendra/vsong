@@ -1,10 +1,30 @@
 angular.module('vsong.controllers', ['ionic', 'vsong.services'])
-.controller('DiscoverCtrl', function($scope, $timeout, User, Recommendations) {
+.controller('DiscoverCtrl', function($scope, $ionicLoading, $timeout, User, Recommendations) {
+	// helper function for loading
+	var showLoading = function() {
+		$ionicLoading.show({
+			template: '<i class="ion-loading-c"></i>',
+			noBackdrop: true
+		});
+	}
+
+	var hideLoading = function() {
+		$ionicLoading.hide();
+	};
+
+	// set loading to true first time while we retrieve songs from server
+	showLoading();
   // get our first songs
-  Recommendations.init().then(function(){
+  Recommendations.init()
+  .then(function(){
   	//initialize the current song
   	$scope.currentSong = Recommendations.queue[0];
   	Recommendations.playCurrentSong();
+  })
+  .then(function() {
+  	// turn loading off
+  	hideLoading();
+  	$scope.currentSong.loaded = true;
   });
   
   // fired when we favorite / skip a song.
@@ -21,9 +41,12 @@ angular.module('vsong.controllers', ['ionic', 'vsong.services'])
   	$timeout(function() {
   		//$timeout to allow animation to complete
 	  	$scope.currentSong = Recommendations.queue[0];
+	  	$scope.currentSong.loaded = false;
   	}, 250);
 
-  	Recommendations.playCurrentSong();
+  	Recommendations.playCurrentSong().then(function() {
+  		$scope.currentSong.loaded = true;
+  	});
   };
 
   // used for retrieving the next album image.
@@ -35,16 +58,23 @@ angular.module('vsong.controllers', ['ionic', 'vsong.services'])
   	return ''
   };
 })
-.controller('FavoritesCtrl', function($scope, User) {
+.controller('FavoritesCtrl', function($scope, User, $window) {
 	//get the list of our favorites from the user service
 	$scope.favorites = User.favorites;
 	$scope.removeSong = function(song, index) {
 		User.removeSongFromFavorites(song, index);
 	};
+	$scope.openSong = function(song) {
+		$window.open(song.open_url, '_system');
+	};
 })
-.controller('TabsCtrl', function($scope, Recommendations) {
+.controller('TabsCtrl', function($scope, Recommendations, User) {
+	// expose the number of new favorites to the scope
+	$scope.favCount = User.favoriteCount;
+
 	// stop audio when going to favorites page
 	$scope.enteringFavorites =  function() {
+		User.newFavorites = 0;
 		Recommendations.haltAudio();
 	};
 
