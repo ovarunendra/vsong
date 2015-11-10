@@ -1,9 +1,10 @@
 angular.module('vsong.controllers', ['ionic', 'vsong.services'])
 .controller('DiscoverCtrl', function($scope, $timeout, User, Recommendations) {
   // get our first songs
-  Recommendations.getNextSongs().then(function(){
+  Recommendations.init().then(function(){
   	//initialize the current song
   	$scope.currentSong = Recommendations.queue[0];
+  	Recommendations.playCurrentSong();
   });
   
   // fired when we favorite / skip a song.
@@ -21,6 +22,8 @@ angular.module('vsong.controllers', ['ionic', 'vsong.services'])
   		//$timeout to allow animation to complete
 	  	$scope.currentSong = Recommendations.queue[0];
   	}, 250);
+
+  	Recommendations.playCurrentSong();
   };
 
   // used for retrieving the next album image.
@@ -39,6 +42,14 @@ angular.module('vsong.controllers', ['ionic', 'vsong.services'])
 		User.removeSongFromFavorites(song, index);
 	};
 })
-.controller('TabsCtrl', function($scope) {
+.controller('TabsCtrl', function($scope, Recommendations) {
+	// stop audio when going to favorites page
+	$scope.enteringFavorites =  function() {
+		Recommendations.haltAudio();
+	};
+
+	$scope.leavingFavorites = function() {
+		Recommendations.init();
+	}
 
 })
